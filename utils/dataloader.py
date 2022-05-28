@@ -6,13 +6,16 @@ np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 import os
 
 class DataLoader:
-    def __init__(self, args) -> None:
+    def __init__(self, args, train_dataset = None, eval_dataset = None) -> None:
         self.args = args
         self.input_column = "path"
         self.output_column = "emotion"
         self.model_name = self.args.model_name
         self.pooling_mode = self.args.pooling_mode
-        self.train_dataset, self.eval_dataset = self.get_dataset()
+        if train_dataset == None and eval_dataset == None: 
+            self.train_dataset, self.eval_dataset = self.get_dataset()
+        else: 
+            self.train_dataset, self.eval_dataset = train_dataset, eval_dataset
         self.num_labels, self.label_list = self.get_classification_labels(self.train_dataset)
 
         self.config = AutoConfig.from_pretrained(

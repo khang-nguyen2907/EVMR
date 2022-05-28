@@ -16,8 +16,7 @@ def parsers():
                         help="Path of the train dataset.")
     parser.add_argument("--val_dataset", default="./data/test.csv", type=str,
                         help="Path of the val dataset.")
-    parser.add_argument("--saved_model", default="None", type=str,
-                        help="Path of the val dataset.")
+    parser.add_argument("--saved_model", default=None)
             
 
     #Model
@@ -31,11 +30,11 @@ def parsers():
                         help="['mean', 'sum', 'max']")
     
     #Training Argument
-    parser.add_argument("--output_dir", default="./save_model", type=str,
+    parser.add_argument("--output_dir", default=None,
                         help="Path of the folder holding saved model, other information.")
-    parser.add_argument("--preprocessed_data", default="./pr_data", type=str,
+    parser.add_argument("--preprocessed_data", default=None, 
                         help="Path of the folder holding preprocessed data")
-    parser.add_argument("--log_dir", default="./logs", type=str,
+    parser.add_argument("--log_dir", default=None,
                         help="Path of the log folder ")
     parser.add_argument("--gradient_accumulation_steps", default=2, type=int,
                         help="gradient_accumulation_steps")
@@ -60,6 +59,7 @@ def main():
         print(">>Loading preprocessed dataset from: ", args.preprocessed_data)
         dataset = load_from_disk(args.preprocessed_data)
         train_dataset, eval_dataset = dataset["train"], dataset["validation"]
+        data_loader = DataLoader(args=args, train_dataset=train_dataset, eval_dataset=eval_dataset)
     else:
         print(">>Loading dataset...\n")
         data_loader = DataLoader(args=args)
@@ -91,13 +91,23 @@ def main():
         per_device_train_batch_size=args.batch_size, 
         per_device_eval_batch_size=args.batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
-        evaluation_strategy="steps",
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        evaluation_strategy = "epoch",
         num_train_epochs=args.epoch_nums,
+        do_train = True, 
+        do_eval= True,
         fp16=True,
+        overwrite_output_dir=True,
+        save_total_limit=10,
         save_steps=args.save_steps,
         eval_steps=args.save_steps,
         logging_steps=args.save_steps,
         learning_rate=args.learning_rate,
+        #warmup_steps=args.warmup_steps,
+        # weight_decay = args.weight_decay, 
+        # adam_epsilon = args.adam_epsilon, 
+        #max_grad_norm = args.max_grad_norm, 
         save_total_limit=2,
     )
 
@@ -114,6 +124,7 @@ def main():
         eval_dataset = eval_dataset, 
         tokenizer = processor.feature_extractor,
     )
+    trainer.train()
 
 if __name__ == "__main__": 
     main()
