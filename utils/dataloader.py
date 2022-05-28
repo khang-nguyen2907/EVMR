@@ -1,6 +1,8 @@
 from transformers import AutoConfig, Wav2Vec2Processor
-from datasets import load_dataset, load_metric
+from datasets import load_dataset, load_metric, DatasetDict
 import torchaudio
+import numpy as np
+np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 class DataLoader:
     def __init__(self, args) -> None:
@@ -10,7 +12,6 @@ class DataLoader:
         self.model_name = self.args.model_name
         self.pooling_mode = self.args.pooling_mode
         self.train_dataset, self.eval_dataset = self.get_dataset()
-        self.eval_dataset = self.get_dataset(self.args.val_dataset)
         self.num_labels, self.label_list = self.get_classification_labels(self.train_dataset)
 
         self.config = AutoConfig.from_pretrained(
@@ -77,16 +78,22 @@ class DataLoader:
     def get_train_val_dataset(self): 
         train_dataset = self.train_dataset.map(
             self.preprocess_function, 
-            batch_size = self.args.batch_size, 
-            batched = True, 
+            # batch_size = self.args.batch_size, 
+            # batched = True, 
             num_proc = self.args.num_proc
         )
 
         eval_dataset = self.eval_dataset.map(
             self.preprocess_function, 
-            batch_size = self.args.batch_size, 
-            batched = True, 
+            # batch_size = self.args.batch_size, 
+            # batched = True, 
             num_proc = self.args.num_proc
         )
+
+        dataset = DatasetDict({
+            "train": train_dataset, 
+            "validation": eval_dataset
+        })
+        dataset.save_to_disk(self.args.preprocessed_data)
 
         return train_dataset, eval_dataset

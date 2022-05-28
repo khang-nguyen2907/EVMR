@@ -6,6 +6,7 @@ from utils.data_utils import *
 from utils.dataloader import *
 import argparse
 from utils.trainer import *
+from datasets import DatasetDict, load_from_disk
 
 from transformers import TrainingArguments
 def parsers(): 
@@ -32,6 +33,8 @@ def parsers():
     #Training Argument
     parser.add_argument("--output_dir", default="./save_model", type=str,
                         help="Path of the folder holding saved model, other information.")
+    parser.add_argument("--preprocessed_data", default="./pr_data", type=str,
+                        help="Path of the folder holding preprocessed data")
     parser.add_argument("--log_dir", default="./logs", type=str,
                         help="Path of the log folder ")
     parser.add_argument("--gradient_accumulation_steps", default=2, type=int,
@@ -50,13 +53,23 @@ def parsers():
 def main(): 
     args = parsers()
 
+    print("*"*27, " LOAD DATASET ", "*"*27)
+    print("Loading dataset...\n")
     #dataset
-    data_loader = DataLoader(args=args)
-    train_dataset, eval_dataset = data_loader.get_train_val_dataset()
+    if args.preprocessed_data != "None":
+        print(">>Loading preprocessed dataset from: ", args.preprocessed_data)
+        dataset = load_from_disk(args.preprocessed_data)
+        train_dataset, eval_dataset = dataset["train"], dataset["validation"]
+    else:
+        print(">>Loading dataset...\n")
+        data_loader = DataLoader(args=args)
+        train_dataset, eval_dataset = data_loader.get_train_val_dataset()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     #initialize model 
+    print("*"*27, " INITIALIZE MODEL ", "*"*27)
+    print("Initializing model ...\n")
     model = Wav2Vec2ForSpeechClassification.from_pretrained(
         args.model_name, 
         config = data_loader.get_config()
@@ -69,10 +82,12 @@ def main():
     model.freeze_feature_extractor()
     model.to(device)
 
+    print("*"*27, " CREATE TRAINING ARGUMENTS ", "*"*27)
+    print("creating training arguments...\n")
     #Training Arguments
     training_args = TrainingArguments(
         output_dir = args.output_dir, 
-        loggibf_dir = args.log_dir,
+        logging_dir = args.log_dir,
         per_device_train_batch_size=args.batch_size, 
         per_device_eval_batch_size=args.batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
@@ -89,6 +104,7 @@ def main():
     processor = data_loader.get_processor()
     data_collator = DataCollatorCTCWithPadding(processor=processor, padding = True)
 
+    print("*"*27, " TRAINING ", "*"*27)
     trainer = Torontorainer(
         model=model, 
         data_collator = data_collator, 
