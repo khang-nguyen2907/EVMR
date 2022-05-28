@@ -9,7 +9,7 @@ class DataLoader:
         self.output_column = "emotion"
         self.model_name = self.args.model_name
         self.pooling_mode = self.args.pooling_mode
-        self.train_dataset = self.get_dataset(self.args.train_dataset)
+        self.train_dataset, self.eval_dataset = self.get_dataset()
         self.eval_dataset = self.get_dataset(self.args.val_dataset)
         self.num_labels, self.label_list = self.get_classification_labels(self.train_dataset)
 
@@ -66,7 +66,7 @@ class DataLoader:
         return label
     
     def preprocess_function(self, examples):
-        speech_list = [self.speech_file_to_array_fn(path) for path in examples[self.input_column]]
+        speech_list = [self.speech_file_to_array_fn(path.replace("/content", "./data")) for path in examples[self.input_column]]
         target_list = [self.label_to_id(label, self.label_list) for label in examples[self.output_column]]
 
         result = self.processor(speech_list, sampling_rate=self.target_sampling_rate)

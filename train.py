@@ -63,7 +63,7 @@ def main():
     )
     if args.saved_model != "None":
         print (f'loading and initializing model from {args.saved_model}')
-        model_state_dict, old_args = torch.load(args.load_model_path, map_location=torch.device('cpu'))
+        model_state_dict, old_args = torch.load(args.saved_model, map_location=torch.device('cpu'))
         model.load_state_dict(model_state_dict)
 
     model.freeze_feature_extractor()
