@@ -3,6 +3,7 @@ from datasets import load_dataset, load_metric, DatasetDict
 import torchaudio
 import numpy as np
 np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+import os
 
 class DataLoader:
     def __init__(self, args) -> None:
@@ -94,6 +95,9 @@ class DataLoader:
             "train": train_dataset, 
             "validation": eval_dataset
         })
+
+        if self.args.preprocessed_data == "None":
+            os.makedirs(self.args.preprocessed_data)
         dataset.save_to_disk(self.args.preprocessed_data)
 
         return train_dataset, eval_dataset
