@@ -42,9 +42,13 @@ def parsers():
                         help="number of training epochs")
     parser.add_argument("--fp16", default=True, type=bool,
                         help="use fp16 or not")
-    parser.add_argument("--save_steps", default=2, type=int,
+    parser.add_argument("--save_steps", default=500, type=int,
                         help="save steps")
     parser.add_argument("--learning_rate", default=1e-4, type=float,
+                        help="learning_rate")
+    parser.add_argument("--warmup_steps", default=1000, type=int,
+                        help="save steps")
+    parser.add_argument("--weight_decay", default=0.005, type=float,
                         help="learning_rate")
 
     args = parser.parse_args()
@@ -91,23 +95,18 @@ def main():
         per_device_train_batch_size=args.batch_size, 
         per_device_eval_batch_size=args.batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
-        evaluation_strategy="epoch",
-        save_strategy="epoch",
-        evaluation_strategy = "epoch",
+        evaluation_strategy = "steps",
         num_train_epochs=args.epoch_nums,
         do_train = True, 
         do_eval= True,
         fp16=True,
-        overwrite_output_dir=True,
-        save_total_limit=10,
+        group_by_length=True,
         save_steps=args.save_steps,
         eval_steps=args.save_steps,
         logging_steps=args.save_steps,
         learning_rate=args.learning_rate,
-        #warmup_steps=args.warmup_steps,
-        # weight_decay = args.weight_decay, 
-        # adam_epsilon = args.adam_epsilon, 
-        #max_grad_norm = args.max_grad_norm, 
+        warmup_steps=args.warmup_steps,
+        weight_decay = args.weight_decay, 
         save_total_limit=2,
     )
 
